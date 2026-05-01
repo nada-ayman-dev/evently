@@ -8,14 +8,22 @@ import 'screens/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    if (!e.toString().contains('duplicate-app')) {
+      rethrow;
+    }
+  }
   runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  static of(BuildContext context) =>
+  static State<MyApp>? of(BuildContext context) =>
       context.findAncestorStateOfType<_MyAppState>();
 
   @override

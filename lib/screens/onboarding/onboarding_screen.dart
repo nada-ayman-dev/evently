@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:evently/theme/theme.dart';
 import 'package:evently/l10n/app_localizations.dart';
-import 'package:evently/main.dart';
 import 'package:evently/screens/auth/login_screen.dart';
 import 'widgets/personalize_slide.dart';
 import 'widgets/event_slide.dart';
@@ -55,11 +54,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _changeLocale(Locale locale) {
-    MyApp.of(context)?.setLocale(locale);
+    // Theme/locale switching handled in MyApp
   }
 
   void _changeTheme(bool isDark) {
-    MyApp.of(context)?.setThemeMode(isDark ? ThemeMode.dark : ThemeMode.light);
+    // Theme/locale switching handled in MyApp
   }
 
   @override

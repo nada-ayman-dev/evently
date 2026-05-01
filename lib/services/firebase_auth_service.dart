@@ -64,15 +64,9 @@ class FirebaseAuthService {
     }
   }
 
-  /// Sign in with Google (placeholder - will be configured in next update)
+  /// Sign in with Google
   Future<UserCredential> signInWithGoogle() async {
-    try {
-      throw UnsupportedError(
-        'Google sign-in is coming soon! Please use email/password login for now.',
-      );
-    } catch (e) {
-      rethrow;
-    }
+    throw UnimplementedError('Google Sign-In is coming soon!');
   }
 
   /// Handle Firebase auth exceptions

@@ -14,6 +14,16 @@ class _HomeScreenState extends State<HomeScreen> {
   final _authService = FirebaseAuthService();
   String? _userName;
   String? _userEmail;
+  String _selectedCategory = 'All';
+
+  final List<String> _categories = [
+    'All',
+    'Birthday',
+    'Meeting',
+    'Sport',
+    'Book Club',
+    'Excitation',
+  ];
 
   @override
   void initState() {
@@ -31,24 +41,28 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _handleLogout() async {
+  Future<void> _handleLogout() async {
     try {
       await _authService.signOut();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logged out successfully')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Logged out successfully')),
+          );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+      }
     }
   }
 
@@ -85,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -122,6 +136,59 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 30),
+
+              // Event Category Tabs
+              SizedBox(
+                height: 50,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final category = _categories[index];
+                    final isSelected = _selectedCategory == category;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategory = category;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(25),
+                            border: isSelected
+                                ? null
+                                : Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: Center(
+                            child: Text(
+                              category,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey[700],
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
 
               // Events Section
               Text(
