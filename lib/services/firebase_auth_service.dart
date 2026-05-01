@@ -5,9 +5,6 @@ class FirebaseAuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirestoreService _firestoreService = FirestoreService();
 
-  // Get current user
-  User? get currentUser => _firebaseAuth.currentUser;
-
   /// Get current user
   User? get currentUser => _firebaseAuth.currentUser;
 
@@ -64,6 +61,17 @@ class FirebaseAuthService {
       await _firebaseAuth.signOut();
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    }
+  }
+
+  /// Sign in with Google (placeholder - will be configured in next update)
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      throw UnsupportedError(
+        'Google sign-in is coming soon! Please use email/password login for now.',
+      );
+    } catch (e) {
+      rethrow;
     }
   }
 
