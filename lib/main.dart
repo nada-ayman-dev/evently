@@ -8,15 +8,13 @@ import 'screens/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
+
+  if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (e) {
-    if (!e.toString().contains('duplicate-app')) {
-      rethrow;
-    }
   }
+
   runApp(const MyApp());
 }
 
