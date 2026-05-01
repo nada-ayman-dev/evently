@@ -285,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // TODO: Implement Google login
                   },
                   icon: Image.asset(
-                    'assets/icons/google.png',
+                    'assets/images/google.png',
                     width: 24,
                     height: 24,
                   ),
