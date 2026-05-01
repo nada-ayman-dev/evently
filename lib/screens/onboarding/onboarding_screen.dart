@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:evently/theme/theme.dart';
 import 'package:evently/l10n/app_localizations.dart';
 import 'package:evently/main.dart';
+import 'package:evently/screens/auth/login_screen.dart';
 import 'widgets/personalize_slide.dart';
 import 'widgets/event_slide.dart';
 
@@ -48,7 +49,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _getStarted() {
-    Navigator.of(context).pushReplacementNamed('/home');
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   void _changeLocale(Locale locale) {
