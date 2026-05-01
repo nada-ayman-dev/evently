@@ -24,6 +24,7 @@ class AppColors {
   static const Color grey700 = Color(0xFF374151);
   static const Color grey800 = Color(0xFF1F2937);
   static const Color grey900 = Color(0xFF111827);
+  static const Color hintText = Color(0xFF686868);
 
   // Status colors
   static const Color success = Color(0xFF10B981);

@@ -86,6 +86,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   hintText: 'Enter your email',
+                  hintStyle: const TextStyle(
+                    color: AppColors.hintText,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    height: 1.0,
+                    letterSpacing: 0,
+                  ),
                   prefixIcon: const Icon(Icons.email_outlined),
                   prefixIconColor: AppColors.grey400,
                   border: OutlineInputBorder(
@@ -113,6 +121,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   hintText: 'Enter your password',
+                  hintStyle: const TextStyle(
+                    color: AppColors.hintText,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    height: 1.0,
+                    letterSpacing: 0,
+                  ),
                   prefixIcon: const Icon(Icons.lock_outlined),
                   prefixIconColor: AppColors.grey400,
                   suffixIcon: IconButton(
