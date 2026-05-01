@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:evently/theme/app_colors.dart';
+import 'package:evently/services/firebase_auth_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = FirebaseAuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -22,10 +25,17 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  void _handleLogin() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    if (!_emailController.text.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email')),
       );
       return;
     }
@@ -34,15 +44,52 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Login successful!')));
-    });
+    try {
+      await _authService.loginWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+
+        // TODO: Navigate to home screen
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (_) => const HomeScreen()),
+        // );
+      }
+    } catch (e) {
+      String message = 'Login failed';
+
+      if (e.toString().contains('user-not-found')) {
+        message = 'No user found for this email';
+      } else if (e.toString().contains('wrong-password')) {
+        message = 'Wrong password';
+      } else if (e.toString().contains('invalid-email')) {
+        message = 'Invalid email address';
+      } else if (e.toString().contains('user-disabled')) {
+        message = 'This account has been disabled';
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } finally {
+      FocusScope.of(context).unfocus();
+    }
   }
 
   @override
@@ -92,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Image.asset(
+                    child: SvgPicture.asset(
                       'assets/icons/sms.svg',
                       width: 24,
                       height: 24,
@@ -133,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Image.asset(
+                    child: SvgPicture.asset(
                       'assets/icons/lock.svg',
                       width: 24,
                       height: 24,

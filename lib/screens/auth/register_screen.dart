@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:evently/theme/app_colors.dart';
+import 'package:evently/services/firebase_auth_service.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -14,6 +16,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _authService = FirebaseAuthService();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -27,13 +30,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _handleRegister() {
+  void _handleRegister() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    if (!_emailController.text.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email')),
       );
       return;
     }
@@ -56,19 +66,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!')),
+    try {
+      await _authService.registerWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        displayName: _nameController.text.trim(),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    });
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account created successfully!')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
+    } catch (e) {
+      String message = 'Registration failed';
+
+      if (e.toString().contains('email-already-in-use')) {
+        message = 'An account already exists with this email';
+      } else if (e.toString().contains('weak-password')) {
+        message = 'Password is too weak';
+      } else if (e.toString().contains('invalid-email')) {
+        message = 'Invalid email address';
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } finally {
+      FocusScope.of(context).unfocus();
+    }
   }
 
   @override
@@ -118,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Image.asset(
+                    child: SvgPicture.asset(
                       'assets/icons/user.svg',
                       width: 24,
                       height: 24,
@@ -158,7 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Image.asset(
+                    child: SvgPicture.asset(
                       'assets/icons/sms.svg',
                       width: 24,
                       height: 24,
@@ -199,7 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Image.asset(
+                    child: SvgPicture.asset(
                       'assets/icons/lock.svg',
                       width: 24,
                       height: 24,
@@ -252,7 +291,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Image.asset(
+                    child: SvgPicture.asset(
                       'assets/icons/lock.svg',
                       width: 24,
                       height: 24,
