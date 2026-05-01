@@ -83,14 +83,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               // Logo
               const SizedBox(height: 40),
-              const Text(
-                'EVENTLY',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                  fontFamily: 'Poppins',
-                ),
+              Image.asset(
+                'assets/images/logo.png',
+                height: 58,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 40),
 
