@@ -90,8 +90,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 1.0,
                     letterSpacing: 0,
                   ),
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  prefixIconColor: AppColors.grey400,
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Image.asset(
+                      'assets/icons/sms.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: AppColors.grey200),
@@ -125,8 +131,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 1.0,
                     letterSpacing: 0,
                   ),
-                  prefixIcon: const Icon(Icons.lock_outlined),
-                  prefixIconColor: AppColors.grey400,
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Image.asset(
+                      'assets/icons/lock.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
