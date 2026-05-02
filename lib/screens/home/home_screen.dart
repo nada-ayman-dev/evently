@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:evently/theme/app_colors.dart';
 import '../auth/login_screen.dart';
-import '../favorites/favorites_screen.dart';
+//import '../favorites/favorites_screen.dart';
 import '../profile/profile_screen.dart';
+import '../add_event/add_event_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'date': '25 Jan',
       'title': 'Book Club',
-      'description': 'Book Club Meeting',
+      'description': 'Book ClubMeeting',
       'category': 'Book Club',
       'image': 'assets/images/BookClub.png',
     },
@@ -419,33 +420,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-            const SizedBox(height: 30),
-
-            // Action Buttons
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Navigate to create event screen
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Create Event',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -571,7 +545,18 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () {
-          // TODO: Navigate to create event screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddEventScreen(
+                categories: _categories,
+                events: _events,
+                onEventAdded: () {
+                  setState(() {});
+                },
+              ),
+            ),
+          );
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
