@@ -30,43 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Exhibition',
   ];
 
-  List<Map<String, String>> _events = [
-    {
-      'date': '21 Jan',
-      'title': 'Birthday',
-      'description': 'This is a Birthday Party',
-      'category': 'Birthday',
-      'image': 'assets/images/Birthday.png',
-    },
-    {
-      'date': '22 Jan',
-      'title': 'Meeting',
-      'description': 'Meeting for Updating The Development Method',
-      'category': 'Meeting',
-      'image': 'assets/images/Meeting.png',
-    },
-    {
-      'date': '23 Jan',
-      'title': 'Exhibition',
-      'description': 'Art Exhibition',
-      'category': 'Exhibition',
-      'image': 'assets/images/Exhibition.png',
-    },
-    {
-      'date': '24 Jan',
-      'title': 'Sport',
-      'description': 'Football Match',
-      'category': 'Sport',
-      'image': 'assets/images/Sport.png',
-    },
-    {
-      'date': '25 Jan',
-      'title': 'Book Club',
-      'description': 'Book Club Meeting',
-      'category': 'Book Club',
-      'image': 'assets/images/BookClub.png',
-    },
-  ];
+  List<Map<String, String>> _events = [];
 
   @override
   void initState() {
