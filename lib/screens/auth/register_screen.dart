@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:evently/theme/app_colors.dart';
 import 'login_screen.dart';
 import '../home/home_screen.dart';
@@ -66,8 +67,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // Simulate registration with a delay
-      await Future.delayed(const Duration(milliseconds: 800));
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      // Update user display name
+      await FirebaseAuth.instance.currentUser!.updateDisplayName(
+        _nameController.text,
+      );
+      await FirebaseAuth.instance.currentUser!.reload();
 
       if (mounted) {
         setState(() {
@@ -81,6 +90,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        String errorMessage = 'Registration failed';
+        if (e.code == 'weak-password') {
+          errorMessage = 'Password is too weak';
+        } else if (e.code == 'email-already-in-use') {
+          errorMessage = 'Email is already registered';
+        } else if (e.code == 'invalid-email') {
+          errorMessage = 'Invalid email format';
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
       if (mounted) {
