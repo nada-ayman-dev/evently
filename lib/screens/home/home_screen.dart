@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Exhibition',
   ];
 
-  final List<Map<String, String>> _events = [
+  List<Map<String, String>> _events = [
     {
       'date': '21 Jan',
       'title': 'Birthday',

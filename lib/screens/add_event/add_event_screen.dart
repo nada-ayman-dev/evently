@@ -57,6 +57,23 @@ class _AddEventScreenState extends State<AddEventScreen> {
     }
   }
 
+  String _getImagePath(String category) {
+    switch (category) {
+      case 'Birthday':
+        return 'assets/images/Birthday.png';
+      case 'Meeting':
+        return 'assets/images/Meeting.png';
+      case 'Sport':
+        return 'assets/images/Sport.png';
+      case 'Book Club':
+        return 'assets/images/BookClub.png';
+      case 'Exhibition':
+        return 'assets/images/Exhibition.png';
+      default:
+        return 'assets/images/BookClub.png';
+    }
+  }
+
   void _handleAddEvent() {
     if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,6 +88,35 @@ class _AddEventScreenState extends State<AddEventScreen> {
       );
       return;
     }
+
+    // Format the date as "DD MMM"
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final formattedDate =
+        '${_selectedDate!.day} ${months[_selectedDate!.month - 1]}';
+
+    // Add the new event to the events list
+    final newEvent = {
+      'date': formattedDate,
+      'title': _titleController.text,
+      'description': _descriptionController.text,
+      'category': _selectedCategory,
+      'image': _getImagePath(_selectedCategory),
+    };
+
+    widget.events.add(newEvent);
 
     ScaffoldMessenger.of(
       context,
