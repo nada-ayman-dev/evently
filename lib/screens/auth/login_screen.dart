@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:evently/theme/app_colors.dart';
-import 'package:evently/services/firebase_auth_service.dart';
 import 'register_screen.dart';
 import '../home/home_screen.dart';
 
@@ -15,7 +14,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = FirebaseAuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -46,10 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authService.loginWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      // Simulate login with a delay
+      await Future.delayed(const Duration(milliseconds: 800));
 
       if (mounted) {
         setState(() {
@@ -66,18 +62,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      String message = 'Login failed';
-
-      if (e.toString().contains('user-not-found')) {
-        message = 'No user found for this email';
-      } else if (e.toString().contains('wrong-password')) {
-        message = 'Wrong password';
-      } else if (e.toString().contains('invalid-email')) {
-        message = 'Invalid email address';
-      } else if (e.toString().contains('user-disabled')) {
-        message = 'This account has been disabled';
-      }
-
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -85,10 +69,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
-      FocusScope.of(context).unfocus();
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+      }
     }
   }
 
@@ -98,7 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authService.signInWithGoogle();
+      // Simulate Google login with a delay
+      await Future.delayed(const Duration(milliseconds: 1000));
 
       if (mounted) {
         setState(() {
@@ -125,7 +112,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
-      FocusScope.of(context).unfocus();
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+      }
     }
   }
 

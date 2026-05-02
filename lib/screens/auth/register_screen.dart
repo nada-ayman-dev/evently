@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:evently/theme/app_colors.dart';
-import 'package:evently/services/firebase_auth_service.dart';
 import 'login_screen.dart';
 import '../home/home_screen.dart';
 
@@ -17,7 +16,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _authService = FirebaseAuthService();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -68,11 +66,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      await _authService.registerWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        displayName: _nameController.text.trim(),
-      );
+      // Simulate registration with a delay
+      await Future.delayed(const Duration(milliseconds: 800));
 
       if (mounted) {
         setState(() {
@@ -88,26 +83,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } catch (e) {
-      String message = 'Registration failed';
-
-      if (e.toString().contains('email-already-in-use')) {
-        message = 'An account already exists with this email';
-      } else if (e.toString().contains('weak-password')) {
-        message = 'Password is too weak';
-      } else if (e.toString().contains('invalid-email')) {
-        message = 'Invalid email address';
-      }
-
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
-      FocusScope.of(context).unfocus();
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+      }
     }
   }
 
@@ -117,7 +104,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      await _authService.signInWithGoogle();
+      // Simulate Google sign up with a delay
+      await Future.delayed(const Duration(milliseconds: 1000));
 
       if (mounted) {
         setState(() {
@@ -143,7 +131,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
-      FocusScope.of(context).unfocus();
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+      }
     }
   }
 
