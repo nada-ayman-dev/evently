@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'date': '25 Jan',
       'title': 'Book Club',
-      'description': 'Book ClubMeeting',
+      'description': 'Book Club Meeting',
       'category': 'Book Club',
       'image': 'assets/images/BookClub.png',
     },
