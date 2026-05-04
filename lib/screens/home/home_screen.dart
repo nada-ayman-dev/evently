@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:evently/theme/app_colors.dart';
+import 'package:evently/services/firestore_service.dart';
+import 'package:evently/main.dart';
 import '../auth/login_screen.dart';
+import '../event_details/event_details_screen.dart';
 //import '../favorites/favorites_screen.dart';
 import '../profile/profile_screen.dart';
 import '../add_event/add_event_screen.dart';
@@ -19,7 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isDarkMode = false;
   String _selectedLanguage = 'EN';
   int _selectedNavIndex = 0;
-  Set<String> _favoriteEvents = {};
+  final Set<String> _favoriteEvents = {};
+  final FirestoreService _firestoreService = FirestoreService();
 
   final List<String> _categories = [
     'All',
@@ -30,26 +34,50 @@ class _HomeScreenState extends State<HomeScreen> {
     'Exhibition',
   ];
 
-  List<Map<String, String>> _events = [];
-
   @override
   void initState() {
     super.initState();
     _loadUserData();
   }
 
-  void _loadUserData() {
-    // Using dummy user data
-    setState(() {
-      _userName = _userName ?? 'John Safwat';
-      _userEmail = _userEmail ?? 'john.safwat@example.com';
-    });
+  void _loadUserData() async {
+    try {
+      final userProfile = await _firestoreService.getUserProfile();
+
+      if (userProfile != null && mounted) {
+        final name = userProfile['name'] as String? ?? 'User';
+        final email = userProfile['email'] as String? ?? 'user@example.com';
+
+        setState(() {
+          _userName = name;
+          _userEmail = email;
+        });
+
+        print('✅ User loaded: $name');
+      } else if (mounted) {
+        setState(() {
+          _userName = 'User';
+          _userEmail = 'user@example.com';
+        });
+        print('⚠️ No user profile found');
+      }
+    } catch (e) {
+      print('❌ Error loading user: $e');
+      if (mounted) {
+        setState(() {
+          _userName = 'User';
+          _userEmail = 'user@example.com';
+        });
+      }
+    }
   }
 
   void _toggleTheme() {
     setState(() {
       _isDarkMode = !_isDarkMode;
     });
+    final themeMode = _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+    MyApp.of(context)?.setThemeMode(themeMode);
   }
 
   void _toggleLanguage() {
@@ -77,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildEventCard(Map<String, String> event) {
+  Widget _buildEventCard(Map<String, dynamic> event) {
     return RepaintBoundary(
       child: Container(
         height: 193,
@@ -89,11 +117,15 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 1,
             strokeAlign: BorderSide.strokeAlignOutside,
           ),
-          image: event['image']!.isNotEmpty
+          image: (event['imagePath'] ?? '').toString().isNotEmpty
               ? DecorationImage(
-                  image: event['image']!.startsWith('assets/')
-                      ? AssetImage(event['image']!)
-                      : NetworkImage(event['image']!) as ImageProvider,
+                  image:
+                      (event['imagePath'] ?? '').toString().startsWith(
+                        'assets/',
+                      )
+                      ? AssetImage((event['imagePath'] ?? '').toString())
+                      : NetworkImage((event['imagePath'] ?? '').toString())
+                            as ImageProvider,
                   fit: BoxFit.cover,
                 )
               : null,
@@ -123,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      event['date']!,
+                      (event['date'] ?? 'N/A').toString(),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -156,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              event['description']!,
+                              (event['description'] ?? '').toString(),
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -168,17 +200,42 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 8),
                           GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (_favoriteEvents.contains(event['title'])) {
-                                  _favoriteEvents.remove(event['title']);
+                            onTap: () async {
+                              final eventId = (event['id'] ?? event['title'])
+                                  .toString();
+
+                              try {
+                                if (_favoriteEvents.contains(eventId)) {
+                                  // Remove from favorites
+                                  await _firestoreService.removeFavorite(
+                                    eventId,
+                                  );
+                                  if (mounted) {
+                                    setState(() {
+                                      _favoriteEvents.remove(eventId);
+                                    });
+                                  }
                                 } else {
-                                  _favoriteEvents.add(event['title']!);
+                                  // Add to favorites
+                                  await _firestoreService.addFavorite(eventId);
+                                  if (mounted) {
+                                    setState(() {
+                                      _favoriteEvents.add(eventId);
+                                    });
+                                  }
                                 }
-                              });
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: $e')),
+                                  );
+                                }
+                              }
                             },
                             child: Icon(
-                              _favoriteEvents.contains(event['title'])
+                              _favoriteEvents.contains(
+                                    (event['id'] ?? event['title']).toString(),
+                                  )
                                   ? Icons.favorite
                                   : Icons.favorite_outline,
                               color: const Color(0xFF0E3A99),
@@ -221,43 +278,77 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildPageBody() {
     if (_selectedNavIndex == 1) {
-      // Favorites Page
-      final favoriteEvents = _events
-          .where((event) => _favoriteEvents.contains(event['title']))
-          .toList();
-
-      return favoriteEvents.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.favorite_outline,
-                    size: 64,
-                    color: Colors.grey[300],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No favorite events yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                ],
+      // Favorites Page - From Firestore
+      return StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _firestoreService.getUserEvents(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
-            )
-          : ListView(
-              padding: const EdgeInsets.all(20),
-              children: List.generate(favoriteEvents.length, (index) {
-                final event = favoriteEvents[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildEventCard(event),
-                );
-              }),
             );
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final events = snapshot.data ?? [];
+          final favoriteEvents = events
+              .where((e) => _favoriteEvents.contains(e['id']))
+              .toList();
+
+          return favoriteEvents.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.favorite_outline,
+                        size: 64,
+                        color: Colors.grey[300],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No favorite events yet',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: List.generate(favoriteEvents.length, (index) {
+                    final event = favoriteEvents[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EventDetailsScreen(
+                                event: event,
+                                onEventDeleted: () {
+                                  // StreamBuilder will automatically refresh
+                                  setState(() {});
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        child: _buildEventCard(event),
+                      ),
+                    );
+                  }),
+                );
+        },
+      );
     }
 
     if (_selectedNavIndex == 2) {
@@ -359,12 +450,53 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Event Cards List
-            Builder(
-              builder: (context) {
+            // Event Cards List - From Firestore
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _firestoreService.getUserEvents(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
+                    ),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                final events = snapshot.data ?? [];
+
+                if (events.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.event_note,
+                          size: 64,
+                          color: Colors.grey[300],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No events yet. Create one!',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 final filteredEvents = _selectedCategory == 'All'
-                    ? _events
-                    : _events
+                    ? events
+                    : events
                           .where(
                             (event) => event['category'] == _selectedCategory,
                           )
@@ -378,7 +510,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     final event = filteredEvents[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildEventCard(event),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EventDetailsScreen(
+                                event: event,
+                                onEventDeleted: () {
+                                  // StreamBuilder will automatically refresh
+                                  setState(() {});
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        child: _buildEventCard(event),
+                      ),
                     );
                   },
                 );
@@ -514,7 +662,7 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(
               builder: (context) => AddEventScreen(
                 categories: _categories,
-                events: _events,
+                events: [],
                 onEventAdded: () {
                   setState(() {});
                 },

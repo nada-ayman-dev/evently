@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:evently/theme/app_colors.dart';
+import 'package:evently/services/firestore_service.dart';
 import 'login_screen.dart';
 import '../home/home_screen.dart';
 
@@ -30,99 +32,96 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   void _handleRegister() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
-      );
+      _showError('Please fill in all fields');
       return;
     }
 
     if (!_emailController.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email')),
-      );
+      _showError('Please enter a valid email');
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      _showError('Passwords do not match');
       return;
     }
 
     if (_passwordController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
-      );
+      _showError('Password must be at least 6 characters');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      final credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
 
-      // Update user display name
-      await FirebaseAuth.instance.currentUser!.updateDisplayName(
-        _nameController.text,
-      );
-      await FirebaseAuth.instance.currentUser!.reload();
+      final user = credential.user;
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      if (user != null) {
+        await user.updateDisplayName(_nameController.text);
+        await user.reload();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created successfully!')),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        // Save user profile to Firestore
+        final firestoreService = FirestoreService();
+        await firestoreService.saveUserProfile(
+          name: _nameController.text,
+          email: _emailController.text.trim(),
         );
       }
+
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
     } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      if (!mounted) return;
 
-        String errorMessage = 'Registration failed';
-        if (e.code == 'weak-password') {
-          errorMessage = 'Password is too weak';
-        } else if (e.code == 'email-already-in-use') {
-          errorMessage = 'Email is already registered';
-        } else if (e.code == 'invalid-email') {
-          errorMessage = 'Invalid email format';
-        }
+      setState(() => _isLoading = false);
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      switch (e.code) {
+        case 'weak-password':
+          _showError('Password is too weak');
+          break;
+        case 'email-already-in-use':
+          _showError('Email already exists');
+          break;
+        case 'invalid-email':
+          _showError('Invalid email');
+          break;
+        case 'network-request-failed':
+          _showError('No internet connection');
+          break;
+        default:
+          _showError('Registration failed');
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+      _showError('Unexpected error occurred');
     } finally {
-      if (mounted) {
-        FocusScope.of(context).unfocus();
-      }
+      FocusScope.of(context).unfocus();
     }
   }
 
@@ -390,7 +389,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkButton
+                        : AppColors.primary,
+                    foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

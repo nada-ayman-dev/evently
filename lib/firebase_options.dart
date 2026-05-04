@@ -41,11 +41,11 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDummyKeyForAndroid',
+    apiKey: 'AIzaSyDSj3oBzv5aTl6x3u8TePsT4HUIibJ5Wxg',
     appId: '1:767750650169:android:bc8b1543c0db39f89490e8',
     messagingSenderId: '767750650169',
-    projectId: 'evently-12345',
-    storageBucket: 'evently-12345.appspot.com',
+    projectId: 'evently-34893',
+    storageBucket: 'evently-34893.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(

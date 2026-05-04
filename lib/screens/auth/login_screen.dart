@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:evently/theme/app_colors.dart';
@@ -25,24 +26,26 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   void _handleLogin() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
-      );
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      _showError('Please fill in all fields');
       return;
     }
 
     if (!_emailController.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email')),
-      );
+      _showError('Please enter a valid email');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -50,53 +53,75 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      if (!mounted) return;
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+      setState(() => _isLoading = false);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
     } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      if (!mounted) return;
 
-        String errorMessage = 'Login failed';
-        if (e.code == 'user-not-found') {
-          errorMessage = 'No account found with this email';
-        } else if (e.code == 'wrong-password') {
-          errorMessage = 'Incorrect password';
-        } else if (e.code == 'invalid-email') {
-          errorMessage = 'Invalid email format';
-        }
+      setState(() => _isLoading = false);
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      switch (e.code) {
+        case 'user-not-found':
+          _showError('No account found with this email');
+          break;
+        case 'wrong-password':
+          _showError('Wrong password');
+          break;
+        case 'invalid-email':
+          _showError('Invalid email format');
+          break;
+        case 'invalid-credential':
+          _showError('Email or password is incorrect');
+          break;
+        case 'too-many-requests':
+          _showError('Too many attempts, try later');
+          break;
+        case 'network-request-failed':
+          _showError('Check your internet connection');
+          break;
+        default:
+          _showError('Login failed');
+      }
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      switch (e.code) {
+        case 'ERROR_INVALID_CREDENTIAL':
+          _showError('Email or password is incorrect');
+          break;
+        case 'ERROR_USER_NOT_FOUND':
+          _showError('No account found with this email');
+          break;
+        case 'ERROR_WRONG_PASSWORD':
+          _showError('Wrong password');
+          break;
+        case 'ERROR_INVALID_EMAIL':
+          _showError('Invalid email format');
+          break;
+        case 'ERROR_TOO_MANY_REQUESTS':
+          _showError('Too many attempts, try later');
+          break;
+        case 'ERROR_NETWORK_REQUEST_FAILED':
+          _showError('Check your internet connection');
+          break;
+        default:
+          _showError('Login failed: ${e.message}');
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      if (!mounted) return;
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
+      setState(() => _isLoading = false);
+      _showError('Unexpected error occurred');
     } finally {
-      if (mounted) {
-        FocusScope.of(context).unfocus();
-      }
+      FocusScope.of(context).unfocus();
     }
   }
 
@@ -291,7 +316,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkButton
+                        : AppColors.primary,
+                    foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

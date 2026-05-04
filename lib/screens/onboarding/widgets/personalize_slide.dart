@@ -144,7 +144,11 @@ class _PersonalizeSlideSate extends State<PersonalizeSlide> {
                 child: ElevatedButton(
                   onPressed: widget.onNext,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0E3A99),
+                    backgroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkButton
+                        : AppColors.primary,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

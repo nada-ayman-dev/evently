@@ -36,7 +36,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-           
             const SizedBox(height: 40),
             Stack(
               children: [
@@ -45,7 +44,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.grey[200],
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF2A2A2A)
+                        : Colors.grey[200],
                     image:
                         widget.profileImage != null &&
                             widget.profileImage!.isNotEmpty
@@ -61,7 +62,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child:
                       widget.profileImage == null ||
                           widget.profileImage!.isEmpty
-                      ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                      ? Icon(
+                          Icons.person,
+                          size: 60,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkTextSecondary
+                              : Colors.grey,
+                        )
                       : null,
                 ),
 
@@ -90,10 +97,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // User Name
             Text(
               widget.userName ?? 'User',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkText
+                    : Colors.black,
                 fontFamily: 'Poppins',
               ),
             ),
@@ -105,7 +114,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Colors.grey[600],
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkTextSecondary
+                    : Colors.grey[600],
                 fontFamily: 'Poppins',
               ),
             ),
@@ -115,9 +126,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF2A2A2A)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFF0F0F0)),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF457AED)
+                      : const Color(0xFFF0F0F0),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -127,7 +144,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkText
+                          : Colors.black,
                       fontFamily: 'Poppins',
                     ),
                   ),
@@ -136,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Switch(
                       value: widget.isDarkMode,
                       onChanged: (_) => widget.onToggleTheme(),
-                      activeColor: AppColors.primary,
+                      activeColor: AppColors.darkButton,
                       inactiveThumbColor: Colors.grey[400],
                     ),
                   ),
@@ -154,9 +173,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF2A2A2A)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFF0F0F0)),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF457AED)
+                        : const Color(0xFFF0F0F0),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -166,7 +191,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkText
+                            : Colors.black,
                         fontFamily: 'Poppins',
                       ),
                     ),
@@ -177,7 +204,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Colors.grey[600],
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkTextSecondary
+                                : Colors.grey[600],
                             fontFamily: 'Poppins',
                           ),
                         ),
@@ -185,7 +215,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(
                           Icons.arrow_forward_ios,
                           size: 16,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkTextSecondary
+                              : Colors.grey[600],
                         ),
                       ],
                     ),
@@ -204,9 +236,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF2A2A2A)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFF0F0F0)),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF457AED)
+                        : const Color(0xFFF0F0F0),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -216,7 +254,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkText
+                            : Colors.black,
                         fontFamily: 'Poppins',
                       ),
                     ),

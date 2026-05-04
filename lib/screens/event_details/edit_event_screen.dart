@@ -3,30 +3,44 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:evently/theme/app_colors.dart';
 import 'package:evently/services/firestore_service.dart';
 
-class AddEventScreen extends StatefulWidget {
-  final List<String> categories;
-  final List<Map<String, String>> events;
-  final VoidCallback onEventAdded;
+class EditEventScreen extends StatefulWidget {
+  final Map<String, dynamic> event;
+  final VoidCallback? onEventUpdated;
 
-  const AddEventScreen({
-    super.key,
-    required this.categories,
-    required this.events,
-    required this.onEventAdded,
-  });
+  const EditEventScreen({super.key, required this.event, this.onEventUpdated});
 
   @override
-  State<AddEventScreen> createState() => _AddEventScreenState();
+  State<EditEventScreen> createState() => _EditEventScreenState();
 }
 
-class _AddEventScreenState extends State<AddEventScreen> {
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _firestoreService = FirestoreService();
-  String _selectedCategory = 'Book Club';
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+class _EditEventScreenState extends State<EditEventScreen> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  late String _selectedCategory;
+  late String _selectedDate;
+  late String _selectedTime;
+  final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
+
+  final List<String> _categories = [
+    'Birthday',
+    'Meeting',
+    'Sport',
+    'Book Club',
+    'Exhibition',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.event['title'] ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.event['description'] ?? '',
+    );
+    _selectedCategory = widget.event['category'] ?? 'Birthday';
+    _selectedDate = widget.event['date'] ?? '';
+    _selectedTime = widget.event['time'] ?? '';
+  }
 
   @override
   void dispose() {
@@ -36,28 +50,90 @@ class _AddEventScreenState extends State<AddEventScreen> {
   }
 
   Future<void> _pickDate() async {
-    final pickedDate = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
+      firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (pickedDate != null) {
+
+    if (picked != null) {
       setState(() {
-        _selectedDate = pickedDate;
+        _selectedDate =
+            "${picked.day} ${_getMonthName(picked.month)} ${picked.year}";
       });
     }
   }
 
   Future<void> _pickTime() async {
-    final pickedTime = await showTimePicker(
+    final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
-    if (pickedTime != null) {
+
+    if (picked != null) {
       setState(() {
-        _selectedTime = pickedTime;
+        _selectedTime = picked.format(context);
       });
+    }
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return months[month - 1];
+  }
+
+  Future<void> _handleUpdateEvent() async {
+    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Update event in Firestore
+      await _firestoreService.updateEvent(
+        eventId: widget.event['id'],
+        title: _titleController.text,
+        description: _descriptionController.text,
+        category: _selectedCategory,
+        date: _selectedDate,
+        time: _selectedTime,
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        // Call the callback to refresh HomeScreen
+        widget.onEventUpdated?.call();
+        await Future.delayed(const Duration(milliseconds: 500));
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event updated successfully')),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -91,82 +167,6 @@ class _AddEventScreenState extends State<AddEventScreen> {
     }
   }
 
-  void _handleAddEvent() async {
-    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
-      );
-      return;
-    }
-
-    if (_selectedDate == null || _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select date and time')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      // Format the date as "DD MMM"
-      final months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      final formattedDate =
-          '${_selectedDate!.day} ${months[_selectedDate!.month - 1]}';
-
-      // Format time as "HH:MM"
-      final formattedTime =
-          '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
-
-      // Add event to Firestore
-      await _firestoreService.addEvent(
-        title: _titleController.text,
-        description: _descriptionController.text,
-        category: _selectedCategory,
-        date: formattedDate,
-        time: formattedTime,
-        imagePath: _getImagePath(_selectedCategory, context),
-      );
-
-      if (!mounted) return;
-
-      setState(() => _isLoading = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event added successfully!')),
-      );
-
-      _titleController.clear();
-      _descriptionController.clear();
-      _selectedDate = null;
-      _selectedTime = null;
-
-      widget.onEventAdded();
-      Navigator.pop(context);
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() => _isLoading = false);
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,7 +191,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
           ),
         ),
         title: const Text(
-          'Add event',
+          'Edit event',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -257,9 +257,9 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 height: 45,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: widget.categories.length,
+                  itemCount: _categories.length,
                   itemBuilder: (context, index) {
-                    final category = widget.categories[index];
+                    final category = _categories[index];
                     final isSelected = _selectedCategory == category;
 
                     return Padding(
@@ -405,7 +405,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                             colorFilter: ColorFilter.mode(
                               Theme.of(context).brightness == Brightness.dark
                                   ? AppColors.darkButton
-                                  : AppColors.primary,
+                                  : AppColors.white,
                               BlendMode.srcIn,
                             ),
                           ),
@@ -422,13 +422,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
                         ],
                       ),
                       Text(
-                        _selectedDate == null
-                            ? 'Choose date'
-                            : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                        _selectedDate.isEmpty ? 'Choose date' : _selectedDate,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: _selectedDate == null
+                          color: _selectedDate.isEmpty
                               ? AppColors.primary
                               : Colors.black,
                           fontFamily: 'Poppins',
@@ -482,13 +480,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
                         ],
                       ),
                       Text(
-                        _selectedTime == null
-                            ? 'Choose time'
-                            : _selectedTime!.format(context),
+                        _selectedTime.isEmpty ? 'Choose time' : _selectedTime,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: _selectedTime == null
+                          color: _selectedTime.isEmpty
                               ? AppColors.primary
                               : Colors.black,
                           fontFamily: 'Poppins',
@@ -500,12 +496,12 @@ class _AddEventScreenState extends State<AddEventScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Add Event Button
+              // Update Event Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleAddEvent,
+                  onPressed: _isLoading ? null : _handleUpdateEvent,
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         Theme.of(context).brightness == Brightness.dark
@@ -530,13 +526,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(
-                              Icons.add_circle,
+                              Icons.edit,
                               color: Colors.white,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
                             const Text(
-                              'Add event',
+                              'Update event',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
